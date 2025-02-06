@@ -1,0 +1,18 @@
+# @author Júnio Lima
+# @version 1.0
+# @since 2022-08-01
+# @lastModified 2024-02-06
+spring:
+  datasource: # Configurações do banco de dados MySQL
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/student_db?useTimezone=true&serverTimezone=UTC
+    username: root
+    password: admin
+  jpa: # Configurações do JPA
+    open-in-view: true
+    hibernate:
+      ddl-auto: update
+   # properties:
+      # hibernate:
+        # dialect: org.hibernate.dialect.MySQLDialect
+    show-sql: true
