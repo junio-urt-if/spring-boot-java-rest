@@ -21,7 +21,7 @@ import br.gov.ifgoiano.urt.repository.StudentRepository;
  * @author Júnio Lima
  * @version 1.0
  * @since 2022-08-01
- * @lastModified 2025-02-06
+ * @lastModified 2025-02-07
  */
 @Service
 public class StudentServices {
