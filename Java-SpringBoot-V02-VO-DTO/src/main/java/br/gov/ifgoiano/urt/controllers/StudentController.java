@@ -13,11 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.gov.ifgoiano.urt.data.vo.StudentVO;
-import br.gov.ifgoiano.urt.model.Student;
+import br.gov.ifgoiano.urt.data.StudentDTO;
+import br.gov.ifgoiano.urt.data.vo.StudentVO_OutPut;
 import br.gov.ifgoiano.urt.services.StudentServices;
 
 /**
@@ -37,25 +36,34 @@ public class StudentController {
 	private StudentServices service;
 
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	public List<StudentVO> findAll() {
+	public List<StudentDTO> findAll() {
 		return service.findAll();
 	}
 	
 	@GetMapping(value = "/{id}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	public StudentVO findById(@PathVariable(value = "id") Long id) {
+	public StudentDTO findById(@PathVariable(value = "id") Long id) {
 		return service.findById(id);
 	}
 	
+	// exemplo do uso de VO com saída do Student customizado
+	@GetMapping(value = "/vo/{id}",
+	produces = MediaType.APPLICATION_JSON_VALUE)
+	public StudentVO_OutPut findByIdStudentCustomized(
+							@PathVariable(value = "id") Long id) {
+		return service.findByIdStudentCustomized(id);
+	}
+
+	
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	public StudentVO create(@RequestBody StudentVO student) {
+	public StudentDTO create(@RequestBody StudentDTO student) {
 		return service.create(student);
 	}
 	
 	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	public StudentVO update(@RequestBody StudentVO student) {
+	public StudentDTO update(@RequestBody StudentDTO student) {
 		return service.update(student);
 	}
 	

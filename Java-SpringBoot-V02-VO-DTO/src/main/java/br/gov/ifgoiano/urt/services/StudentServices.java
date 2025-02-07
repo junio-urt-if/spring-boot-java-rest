@@ -1,16 +1,14 @@
 package br.gov.ifgoiano.urt.services;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.gov.ifgoiano.urt.data.vo.StudentVO;
+import br.gov.ifgoiano.urt.data.StudentDTO;
+import br.gov.ifgoiano.urt.data.vo.StudentVO_OutPut;
 import br.gov.ifgoiano.urt.exceptions.ResourceNotFoundException;
 import br.gov.ifgoiano.urt.mapper.DataMapper;
 import br.gov.ifgoiano.urt.model.Student;
@@ -35,60 +33,72 @@ public class StudentServices {
 	
 	private Logger logger = Logger.getLogger(StudentServices.class.getName());
 
-	public List<StudentVO> findAll() {
+	public List<StudentDTO> findAll() {
 		logger.info("Finding all students!");
 		
 		var student = repository.findAll();
-		var studentVO = DataMapper.parseListObjects(student, StudentVO.class);
+		var studentDTO = DataMapper.parseListObjects(student, StudentDTO.class);
 		
-		return studentVO; 
+		return studentDTO; 
 		// Pode usar unica linha
-		//return DataMapper.parseListObjects(repository.findAll(), StudentVO.class);
+		//return DataMapper.parseListObjects(repository.findAll(), StudentDTO.class);
 	}
 
-	public StudentVO findById(Long id) {
+	public StudentDTO findById(Long id) {
 		logger.info("Finding one student!");
 		
 		var studentEntity = repository.findById(id)
 				  .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
 		// fazer o mapeamento em única linha
-		return DataMapper.parseObject(studentEntity, StudentVO.class);
+		return DataMapper.parseObject(studentEntity, StudentDTO.class);
 
 	}
 	
-	public StudentVO create(StudentVO studentVO) {
+	// Exemplo de um VO com mapeamento customizado
+	public StudentVO_OutPut findByIdStudentCustomized(Long id) {
+	  logger.info("Finding one student!");
+
+	  var studentEntity = repository.findById(id)
+	     .orElseThrow(() -> new ResourceNotFoundException("No records found for 									this ID!"));
+
+	  // fazer o mapeamento em única linha
+	  return DataMapper.convertStudentEntityToStudentVO_OutPut(studentEntity);
+	}
+
+	
+	public StudentDTO create(StudentDTO studentDTO) {
 		logger.info("Creating one student!");
 		
-		// converto de VO para entidade - salvar no BD
-		var studentEntity = DataMapper.parseObject(studentVO, Student.class);
+		// converto de DTO para entidade - salvar no BD
+		var studentEntity = DataMapper.parseObject(studentDTO, Student.class);
 		  
 		//inserir no BD
 		var student = repository.save(studentEntity);	
 		// converto de entidade para VO - mostrar ao usuário
-		var vo =  DataMapper.parseObject(student, StudentVO.class);
+		var vo =  DataMapper.parseObject(student, StudentDTO.class);
 		
 		// usar um linha
-		//var vo =  DataMapper.parseObject(repository.save(studentEntity), StudentVO.class);
+		//var vo =  DataMapper.parseObject(repository.save(studentEntity), StudentDTO.class);
 		
 		return vo;
 	}
 	
 	@Transactional
-	public StudentVO update(StudentVO studentVO) {
+	public StudentDTO update(StudentDTO studentDTO) {
 		logger.info("Updating one student!");
 		
 		// student entity
-		var entity = repository.findById(studentVO.getId())
+		var entity = repository.findById(studentDTO.getId())
 				.orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
 		
-		entity.setFirstName(studentVO.getFirstName());
-		entity.setLastName(studentVO.getLastName());
-		entity.setAddress(studentVO.getAddress());
-		entity.setGender(studentVO.getGender());
+		entity.setFirstName(studentDTO.getFirstName());
+		entity.setLastName(studentDTO.getLastName());
+		entity.setAddress(studentDTO.getAddress());
+		entity.setGender(studentDTO.getGender());
 
 		var studentEntity = repository.save(entity);
 
-		var vo =  DataMapper.parseObject(studentEntity, StudentVO.class);
+		var vo =  DataMapper.parseObject(studentEntity, StudentDTO.class);
 		return vo;
 	}
 	

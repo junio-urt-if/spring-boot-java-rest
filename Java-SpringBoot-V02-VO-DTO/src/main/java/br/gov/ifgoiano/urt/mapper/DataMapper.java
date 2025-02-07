@@ -35,13 +35,14 @@ public class DataMapper {
 		return destinationObjects;
 	}
 
-	// mapeamento específico
-	public static StudentVO_OutPut convertPersonEntityToPersonVOOutPut(Student student) {
-		StudentVO_OutPut vo = new StudentVO_OutPut();
-		vo.setId(student.getId());
-		vo.setAddress(student.getAddress());
-		vo.setName(student.getFirstName() + " " + student.getLastName());
-		vo.setGender(student.getGender());
+	// mapeamento específico para um VO
+	public static StudentVO_OutPut convertStudentEntityToStudentVO_OutPut(Student student) {
+		StudentVO_OutPut vo = new StudentVO_OutPut(
+				student.getId(),
+				student.getFirstName() + " " + student.getLastName(),
+				student.getAddress(),
+				student.getGender()
+				);
 		return vo;
 	}
 
