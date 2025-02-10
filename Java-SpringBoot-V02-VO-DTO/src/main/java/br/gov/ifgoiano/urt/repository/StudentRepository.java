@@ -1,7 +1,6 @@
 package br.gov.ifgoiano.urt.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import br.gov.ifgoiano.urt.model.Student;
 
