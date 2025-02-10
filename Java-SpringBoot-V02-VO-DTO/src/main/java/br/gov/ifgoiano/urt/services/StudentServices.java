@@ -1,7 +1,9 @@
 package br.gov.ifgoiano.urt.services;
 
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,7 @@ import br.gov.ifgoiano.urt.repository.StudentRepository;
  * @author Júnio Lima
  * @version 1.0
  * @since 2022-08-01
- * @lastModified 2025-02-07
+ * @lastModified 2025-02-10
  */
 @Service
 public class StudentServices {
@@ -31,65 +33,60 @@ public class StudentServices {
 	
 	DataMapper modelmapper = new DataMapper();
 	
-	private Logger logger = Logger.getLogger(StudentServices.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(StudentServices.class.getName());
 
 	public List<StudentDTO> findAll() {
-		logger.info("Finding all students!");
-		
-		var student = repository.findAll();
-		var studentDTO = DataMapper.parseListObjects(student, StudentDTO.class);
-		
-		return studentDTO; 
-		// Pode usar unica linha
-		//return DataMapper.parseListObjects(repository.findAll(), StudentDTO.class);
+	    logger.info("Finding all students!");
+
+	    List<Student> students = repository.findAll();
+	    return DataMapper.parseListObjects(students, StudentDTO.class);
 	}
 
 	public StudentDTO findById(Long id) {
-		logger.info("Finding one student!");
-		
-		var studentEntity = repository.findById(id)
-				  .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
-		// fazer o mapeamento em única linha
-		return DataMapper.parseObject(studentEntity, StudentDTO.class);
+	    logger.info("Finding one student!");
 
+	    return repository.findById(id)
+	            .map(student -> DataMapper.parseObject(student, StudentDTO.class))
+	            .orElseThrow(() -> new ResourceNotFoundException("No records found for the ID: " + id));
 	}
 	
-	// Exemplo de um VO com mapeamento customizado
 	public StudentVO_OutPut findByIdStudentCustomized(Long id) {
-	  logger.info("Finding one student!");
-
-	  var studentEntity = repository.findById(id)
-	     .orElseThrow(() -> new ResourceNotFoundException("No records found for 									this ID!"));
-
-	  // fazer o mapeamento em única linha
-	  return DataMapper.convertStudentEntityToStudentVO_OutPut(studentEntity);
+	    logger.info("Finding one student!");
+	    
+	    return repository.findById(id)
+	            .map(student -> DataMapper.convertStudentEntityToStudentVO_OutPut(student))
+	            .orElseThrow(() -> new ResourceNotFoundException("No records found for the ID: " + id));
 	}
-
 	
+	@Transactional // O método create faz mais do que apenas chamar repository.save(). 
+				  // Ele também converte DTOs para entidades e vice-versa, e 
+	              // pode conter lógica adicional no futuro.
 	public StudentDTO create(StudentDTO studentDTO) {
-		logger.info("Creating one student!");
-		
-		// converto de DTO para entidade - salvar no BD
-		var studentEntity = DataMapper.parseObject(studentDTO, Student.class);
-		  
-		//inserir no BD
-		var student = repository.save(studentEntity);	
-		// converto de entidade para VO - mostrar ao usuário
-		var vo =  DataMapper.parseObject(student, StudentDTO.class);
-		
-		// usar um linha
-		//var vo =  DataMapper.parseObject(repository.save(studentEntity), StudentDTO.class);
-		
-		return vo;
+	    logger.info("Creating one student!");
+
+	    // Converte de DTO para entidade - salvar no BD
+	    Student studentEntity = DataMapper.parseObject(studentDTO, Student.class);
+
+	    try {
+	        // Salva no banco de dados
+	        Student savedStudent = repository.save(studentEntity);
+	        
+	        // Converte a entidade salva para DTO e retorna
+	        return DataMapper.parseObject(savedStudent, StudentDTO.class);
+	    } catch (Exception ex) {
+	        // Lança uma exceção  se algo der errado
+	    	logger.error("Error saving student: {}", ex.getMessage(), ex);
+	        throw new RuntimeException("Error saving student record", ex);
+	    }
 	}
 	
-	@Transactional
+	@Transactional //O método envolve leitura e escrita no banco de dados (findById() e save())
 	public StudentDTO update(StudentDTO studentDTO) {
 		logger.info("Updating one student!");
 		
 		// student entity
 		var entity = repository.findById(studentDTO.getId())
-				.orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+				.orElseThrow(() -> new ResourceNotFoundException("No records found for this ID: " + studentDTO.getId()));
 		
 		entity.setFirstName(studentDTO.getFirstName());
 		entity.setLastName(studentDTO.getLastName());
@@ -98,17 +95,32 @@ public class StudentServices {
 
 		var studentEntity = repository.save(entity);
 
-		var vo =  DataMapper.parseObject(studentEntity, StudentDTO.class);
-		return vo;
+		return DataMapper.parseObject(studentEntity, StudentDTO.class);
 	}
 	
+	// Se o ID não existir, será lançada a exceção ResourceNotFoundException
+	// Se o ID existir, o objeto será deletado normalmente
+	// Forma mais limpa
+	@Transactional
 	public void delete(Long id) {
-				
-		var entityStudent = repository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
-		
-		repository.delete(entityStudent);
+	    Student student = repository.findById(id)
+	        .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID: " + id));
+
+	    repository.delete(student);
 	}
 	
+	// outra forma, mas não gera exceção se não não achar o id 
+	@Transactional
+	public boolean delete1(Long id) {
+	    Optional<Student> entityStudent = repository.findById(id);
+	    
+	    if (entityStudent.isPresent()) {
+	        repository.delete(entityStudent.get());
+	        return true; // Recurso encontrado e deletado
+	    } else {
+	        return false; // Recurso não encontrado
+	    }
+	}	
+
 }
 
